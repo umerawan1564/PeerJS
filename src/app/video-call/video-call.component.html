@@ -1,0 +1,156 @@
+<div
+  class="w-full h-screen bg-gradient-to-br from-indigo-50 to-purple-200 rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row">
+
+  <!-- Global Sticky Sidebar Toggle Button (Mobile only, Top Right) -->
+  <button (click)="toggleSidebar()"
+    class="fixed top-4 right-4 z-50 p-2 bg-indigo-600 text-white rounded-lg shadow-lg hover:bg-indigo-700 transition-colors md:hidden">
+    <!-- Hamburger Icon -->
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M3 12h18M3 18h18" />
+    </svg>
+  </button>
+
+  <!-- Sidebar -->
+  <aside
+    class="sidebar w-full md:w-1/3 lg:w-1/4 p-4 space-y-4 bg-white shadow-xl overflow-y-auto fixed inset-0 md:relative z-40 transition-transform duration-300 ease-in-out transform"
+    [class.-translate-x-full]="!isSidebarOpen" [class.translate-x-0]="isSidebarOpen">
+
+    <!-- Header -->
+    <div class="text-black text-center mt-3">
+      <h3 class="text-xl font-bold">Peer-to-Peer Live Video</h3>
+      <p class="text-dark-100 text-sm mt-1">{{ connectionStatus }}</p>
+    </div>
+
+    <!-- Profile Card -->
+    <div class="bg-white p-4 rounded-xl shadow-sm">
+      <h4 class="text-lg font-semibold text-indigo-700 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+        Your Profile
+      </h4>
+
+      <div class="mt-3">
+        <label class="text-sm font-medium text-gray-600 mb-1 block">Your Peer ID:</label>
+        <input [(ngModel)]="myId" type="text" readonly
+          class="w-full bg-gray-100 p-2 border border-gray-200 rounded-lg text-sm text-gray-700" />
+      </div>
+
+      <button (click)="shareLink()"
+        class="mt-2 w-full flex items-center justify-center p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+        </svg>
+        Share Link
+      </button>
+
+      <div *ngIf="shareableLink" class="mt-3 p-2 bg-indigo-50 rounded-lg border border-indigo-100">
+        <p class="text-xs font-medium text-indigo-700 mb-1">Share this link to connect:</p>
+        <p class="text-xs text-indigo-600 break-all">{{ shareableLink }}</p>
+      </div>
+
+      <div class="mt-4">
+        <label class="text-sm font-medium text-gray-600">Your Name:</label>
+        <div class="flex mt-1 space-x-2">
+          <input [(ngModel)]="myName" type="text"
+            class="flex-1 p-2 border border-gray-400 rounded-lg  focus:border-indigo-500"
+            placeholder="Enter your name" />
+          <button (click)="changeName()"
+            class="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Connections Card -->
+    <div class="bg-white p-4 rounded-xl shadow-sm">
+      <h4 class="text-lg font-semibold text-indigo-700 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        Connections
+      </h4>
+
+      <div class="mt-3">
+        <label class="text-sm font-medium text-gray-600">Connect to Peer:</label>
+        <div class="flex mt-1 space-x-2">
+          <input [(ngModel)]="peerId" type="text"
+            class="flex-1 p-2 border border-gray-400 rounded-lg focus:border-indigo-500" placeholder="Enter peer ID" />
+          <button (click)="connectToPeer(peerId)"
+            class="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <label class="text-sm font-medium text-gray-600">Connected Peers:</label>
+        <ul class="mt-1 bg-gray-50 rounded-lg border border-gray-400 p-2 max-h-32 overflow-y-auto">
+          <li *ngFor="let peer of connectedPeers" class="py-1 px-2 text-sm text-gray-700 flex items-center">
+            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+            {{ peer }}
+            <button (click)="disconnectFromPeer(peer)"
+              class="ml-2 p-1 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600">Disconnect</button>
+          </li>
+          <li *ngIf="connectedPeers.length === 0" class="py-1 px-2 text-sm text-gray-500 italic">No peers connected</li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Call Area -->
+  <main class="flex-1 p-5 mt-1">
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden chat-container flex flex-col">
+      <!-- Call Header -->
+      <div class="bg-indigo-600 p-3 text-white">
+        <h4 class="font-medium flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M4 6h16M4 10h16M4 14h10" />
+          </svg>
+          Video Calls
+        </h4>
+      </div>
+
+      <div class="p-3 flex space-x-2 justify-center mt-2">
+        <button (click)="startCall()"
+          class="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
+          <i class="fas fa-phone"></i>
+          <span>Start Call</span>
+        </button>
+
+        <button (click)="endCall()"
+          class="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2">
+          <i class="fas fa-phone-slash"></i>
+          <span>End Call</span>
+        </button>
+      </div>
+
+      <!-- Video Call Area -->
+      <div id="video-window" class="video-grid p-2 overflow-y-auto  max-h-[70vh]">
+        <!-- Video streams are injected dynamically -->
+      </div>
+
+
+      <!-- Call Controls -->
+      
+
+    </div>
+  </main>
+
+
+</div>

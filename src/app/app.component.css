@@ -1,0 +1,29 @@
+/* Global Styles for enabling scrolling only on mobile devices */
+@media (max-width: 768px) {
+  /* Enable scrolling on mobile devices */
+  body.mobile-scroll {
+    overflow: auto;
+  }
+}
+
+@media (min-width: 769px) {
+  /* Disable scrolling on desktop devices */
+  body.desktop-scroll {
+    overflow: hidden;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Add this class to body to manage the scroll behavior */
+body.no-scroll {
+  overflow: hidden; /* Prevents scrolling */
+}
+
+/* For mobile scroll behavior */
+body.mobile-scroll {
+  overflow: auto;
+}

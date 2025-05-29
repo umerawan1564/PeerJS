@@ -1,0 +1,32 @@
+/* Custom CSS for Sidebar */
+.sidebar {
+  height: 90vh; /* Default height for larger screens */
+  overflow-y: auto;
+}
+
+/* Custom CSS for Chat Container */
+.chat-container {
+  height: 83vh; /* Customize this value to control the chat area height */
+}
+
+/* Custom CSS for Chat Window */
+.chat-window {
+  max-height: calc(90vh - 90px); /* Adjust height of the chat window area */
+}
+
+/* Media query for mobile and tablet devices */
+@media (max-width: 768px) {
+  .sidebar {
+    height: 100vh; /* Set the sidebar height to 100vh for smaller screens */
+  }
+
+  .chat-container {
+    height: calc(80vh - 80px); /* Adjust the height of the chat container accordingly */
+  }
+}
+
+/* Add some basic styling for the whole layout */
+body {
+  font-family: Arial, sans-serif;
+}
+
