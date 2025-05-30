@@ -69,7 +69,14 @@ export class VideoCallComponent implements OnInit, OnDestroy {
     return;
   }
 
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+    navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      }).then(stream => {
       this.localStream = stream;
 
       // ✅ Show local video for the callee
@@ -94,7 +101,14 @@ export class VideoCallComponent implements OnInit, OnDestroy {
       return;
     }
 
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+    navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true
+    }
+  }).then(stream => {
       this.localStream = stream;
       this.displayVideoStream(stream, 'You');
 
@@ -145,31 +159,38 @@ export class VideoCallComponent implements OnInit, OnDestroy {
 
 
   displayVideoStream(stream: MediaStream, label: string): void {
-    const container = document.getElementById('video-window');
-    if (!container) return;
+  const container = document.getElementById('video-window');
+  if (!container) return;
 
-    if (document.getElementById(`video-${label}`)) {
-      return;
-    }
-
-    const videoWrapper = document.createElement('div');
-    videoWrapper.classList.add('relative', 'rounded-lg', 'overflow-hidden', 'shadow');
-
-    const video = document.createElement('video');
-    video.srcObject = stream;
-    video.autoplay = true;
-    video.playsInline = true;
-    video.classList.add('w-full', 'rounded');
-
-    const nameTag = document.createElement('div');
-    nameTag.innerText = label;
-    nameTag.classList.add('absolute', 'bottom-1', 'left-1', 'bg-black', 'text-white', 'text-xs', 'px-2', 'py-1', 'rounded');
-
-    videoWrapper.appendChild(video);
-    videoWrapper.appendChild(nameTag);
-    videoWrapper.id = `video-${label}`;
-    container.appendChild(videoWrapper);
+  if (document.getElementById(`video-${label}`)) {
+    return;
   }
+
+  const videoWrapper = document.createElement('div');
+  videoWrapper.classList.add('relative', 'rounded-lg', 'overflow-hidden', 'shadow');
+
+  const video = document.createElement('video');
+  video.srcObject = stream;
+  video.autoplay = true;
+  video.playsInline = true;
+  video.classList.add('w-full', 'rounded');
+
+  // Mute only local video (labeled 'You')
+  if (label === 'You') {
+    video.muted = true;  // mute audio playback for your own video element
+    // If you want to mute video track too, you can disable it here, but usually muting audio is enough
+  }
+
+  const nameTag = document.createElement('div');
+  nameTag.innerText = label;
+  nameTag.classList.add('absolute', 'bottom-1', 'left-1', 'bg-black', 'text-white', 'text-xs', 'px-2', 'py-1', 'rounded');
+
+  videoWrapper.appendChild(video);
+  videoWrapper.appendChild(nameTag);
+  videoWrapper.id = `video-${label}`;
+  container.appendChild(videoWrapper);
+}
+
 
   removeVideoStream(label: string): void {
     const videoEl = document.getElementById(`video-${label}`);
@@ -362,4 +383,5 @@ export class VideoCallComponent implements OnInit, OnDestroy {
       this.peer.destroy();
     }
   }
+
 }
