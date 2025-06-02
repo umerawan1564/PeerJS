@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import Peer from 'peerjs';
+import { Output, EventEmitter } from '@angular/core';
 
 @Component({
   selector: 'app-chat-messaging',
@@ -18,27 +19,72 @@ export class ChatMessagingComponent implements OnInit, OnDestroy {
   peerId: string = '';
   myName: string = 'User';
   peerNames: Map<string, string> = new Map();
-  shareableLink: string = '';  
+  shareableLink: string = '';
   isSidebarOpen = true;
+  isProvider: boolean = false;
 
   constructor(private route: ActivatedRoute, private location: Location) {}
 
   ngOnInit(): void {
-    this.peer = new Peer();
+    this.route.queryParams.subscribe(params => {
+      const incomingPeerId = params['peer2'];
+      const incomingName = params['name'];
+      
+      
 
-    this.peer.on('open', (id: string) => {
-      this.myId = id;
-      console.log('My peer ID: ', this.myId);
-      this.updateConnectionStatus('Waiting for peers...');
+      if (incomingName === 'provider') {
+        this.isProvider = true;
 
-      this.route.queryParams.subscribe(params => {
-        const incomingPeerId = params['peer'];
-        if (incomingPeerId) {
-          this.peerId = incomingPeerId;
+        if (incomingPeerId && incomingPeerId.trim()) {
+          this.peerId = incomingPeerId.trim();
+        } else {
+          this.peerId = 'provider-' + this.generateRandomId();
+          console.warn('No peer ID found for provider in URL, using fallback:', this.peerId);
         }
-      });
-    });
 
+        this.peer = new Peer(this.peerId);
+
+        this.peer.on('open', (id: string) => {
+          this.myId = id;
+          console.log('Provider Peer initialized with ID:', this.myId);
+          this.updateConnectionStatus('Waiting for patient to connect...');
+        });
+
+      } else {
+        this.isProvider = false;
+        this.peer = new Peer();
+
+        this.peer.on('open', (id: string) => {
+          this.myId = id;
+          console.log('Patient Peer initialized with ID:', this.myId);
+          this.updateConnectionStatus('Waiting for patient to connect...');
+
+          if (incomingPeerId && incomingPeerId.trim()) {
+            this.peerId = incomingPeerId.trim();
+            this.connectToPeer(this.peerId);
+          }
+        });
+      }
+
+      this.setupPeerEvents();
+    });
+  }
+
+  generateRandomId(): string {
+    return Math.random().toString(36).substring(2, 10);
+  }
+
+  
+
+
+@Output() close = new EventEmitter<void>();
+
+closeChat() {
+  this.close.emit();
+}
+
+
+  setupPeerEvents(): void {
     this.peer.on('connection', (connection: any) => {
       this.addPeerConnection(connection);
 

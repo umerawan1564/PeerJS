@@ -19,29 +19,68 @@ export class VideoCallComponent implements OnInit, OnDestroy {
   peerId: string = '';
   myName: string = 'User';
   peerNames: Map<string, string> = new Map();
-  shareableLink: string = '';  
+  shareableLink: string = '';
   isSidebarOpen = true;
   localStream!: MediaStream;
-  activeCalls: Map<string, any> = new Map(); 
+  activeCalls: Map<string, any> = new Map();
+
+  isProvider: boolean = false;
 
   constructor(private route: ActivatedRoute, private location: Location) {}
 
   ngOnInit(): void {
-    this.peer = new Peer();
+    this.route.queryParams.subscribe(params => {
+      const incomingPeerId = params['peer'];
+      console.log('incomming peer id', incomingPeerId);
+      const incomingName = params['name'];
+      console.log('incomming name', incomingName);
 
-    this.peer.on('open', (id: string) => {
-      this.myId = id;
-      console.log('My peer ID: ', this.myId);
-      this.updateConnectionStatus('Waiting for peers...');
-
-      this.route.queryParams.subscribe(params => {
-        const incomingPeerId = params['peer'];
-        if (incomingPeerId) {
+      if (incomingName === 'provider') {
+        // Provider uses incomingPeerId as their own Peer ID
+        if (incomingName === 'provider') {
           this.peerId = incomingPeerId;
+        } else {
+          this.peerId = 'provider-' + this.generateRandomId();
+          console.warn('No peer ID found for provider in URL, using fallback:', this.peerId);
         }
-      });
-    });
 
+        this.peer = new Peer(this.peerId);
+
+        this.peer.on('open', (id: string) => {
+          this.myId = id;
+          console.log('Provider Peer initialized with ID:', this.myId);
+          this.updateConnectionStatus('Waiting for patients to connect...');
+          // Provider waits for incoming connections and calls
+        });
+
+      } else {
+        // Patient: create peer with auto-generated ID
+        this.peer = new Peer();
+
+        this.peer.on('open', (id: string) => {
+          this.myId = id;
+          console.log('Patient Peer initialized with ID:', this.myId);
+          this.updateConnectionStatus('Connecting to provider...');
+
+          if (incomingPeerId && incomingPeerId.trim()) {
+            this.peerId = incomingPeerId.trim();
+            this.connectToPeer(this.peerId);
+          }
+        });
+      }
+
+      this.setupPeerEvents();
+
+      // Initially show the "No Active Video Call" placeholder
+      this.updateNoVideoPlaceholderVisibility();
+    });
+  }
+
+  generateRandomId(): string {
+    return Math.random().toString(36).substring(2, 10);
+  }
+
+  setupPeerEvents(): void {
     this.peer.on('connection', (connection: any) => {
       this.addPeerConnection(connection);
 
@@ -62,14 +101,14 @@ export class VideoCallComponent implements OnInit, OnDestroy {
     this.peer.on('disconnected', () => {
       this.updateConnectionStatus('Disconnected from the network.');
     });
-    
-    this.peer.on('call', (call: any) => {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    console.error('Media devices API not supported in this browser.');
-    return;
-  }
 
-    navigator.mediaDevices.getUserMedia({
+    this.peer.on('call', (call: any) => {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.error('Media devices API not supported in this browser.');
+        return;
+      }
+
+      navigator.mediaDevices.getUserMedia({
         video: true,
         audio: {
           echoCancellation: true,
@@ -77,17 +116,12 @@ export class VideoCallComponent implements OnInit, OnDestroy {
           autoGainControl: true
         }
       }).then(stream => {
-      this.localStream = stream;
-
-      // ✅ Show local video for the callee
-      this.displayVideoStream(this.localStream, 'You');
-
-      call.answer(stream); // Answer the call with our local stream
-      this.handleCallStream(call);
-    }).catch(err => console.error('Error accessing media devices.', err));
-  });
-
-
+        this.localStream = stream;
+        this.displayVideoStream(this.localStream, 'You');
+        call.answer(stream);
+        this.handleCallStream(call);
+      }).catch(err => console.error('Error accessing media devices.', err));
+    });
   }
 
   startCall(): void {
@@ -102,13 +136,13 @@ export class VideoCallComponent implements OnInit, OnDestroy {
     }
 
     navigator.mediaDevices.getUserMedia({
-    video: true,
-    audio: {
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true
-    }
-  }).then(stream => {
+      video: true,
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      }
+    }).then(stream => {
       this.localStream = stream;
       this.displayVideoStream(stream, 'You');
 
@@ -119,93 +153,107 @@ export class VideoCallComponent implements OnInit, OnDestroy {
     }).catch(err => console.error('Media access denied:', err));
   }
 
-
   handleCallStream(call: any): void {
     call.on('stream', (remoteStream: MediaStream) => {
       if (!this.activeCalls.has(call.peer)) {
         this.displayVideoStream(remoteStream, call.peer);
         this.activeCalls.set(call.peer, call);
+        this.updateNoVideoPlaceholderVisibility();
       }
     });
 
     call.on('close', () => {
       this.removeVideoStream(call.peer);
       this.activeCalls.delete(call.peer);
+      this.updateNoVideoPlaceholderVisibility();
     });
   }
 
   endCall(): void {
-    // Close all active calls and stop their media streams
     this.activeCalls.forEach((call, peerId) => {
-      if (call && call.close) {
-        call.close();
-      }
-      // Try to stop all tracks of remote streams
+      if (call && call.close) call.close();
       if (call && call.remoteStream) {
         call.remoteStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
       }
       this.removeVideoStream(peerId);
     });
     this.activeCalls.clear();
-    
-    // Remove your own video element
+
     this.removeVideoStream('You');
 
-    // Stop all tracks of the local stream to release camera and mic
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => track.stop());
     }
-  }
 
+    this.updateNoVideoPlaceholderVisibility();
+  }
 
   displayVideoStream(stream: MediaStream, label: string): void {
-  const container = document.getElementById('video-window');
-  if (!container) return;
+    const container = document.getElementById('video-window');
+    if (!container) return;
 
-  if (document.getElementById(`video-${label}`)) {
-    return;
+    if (document.getElementById(`video-${label}`)) return;
+
+    const videoWrapper = document.createElement('div');
+    videoWrapper.classList.add('relative', 'rounded-lg', 'overflow-hidden', 'shadow');
+
+    const video = document.createElement('video');
+    video.srcObject = stream;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.classList.add('w-full', 'rounded');
+
+    if (label === 'You') {
+      video.muted = true;
+    }
+
+    const nameTag = document.createElement('div');
+    nameTag.innerText = label;
+    nameTag.classList.add('absolute', 'bottom-1', 'left-1', 'bg-black', 'text-white', 'text-xs', 'px-2', 'py-1', 'rounded');
+
+    videoWrapper.appendChild(video);
+    videoWrapper.appendChild(nameTag);
+    videoWrapper.id = `video-${label}`;
+    container.appendChild(videoWrapper);
+
+    this.updateNoVideoPlaceholderVisibility();
   }
-
-  const videoWrapper = document.createElement('div');
-  videoWrapper.classList.add('relative', 'rounded-lg', 'overflow-hidden', 'shadow');
-
-  const video = document.createElement('video');
-  video.srcObject = stream;
-  video.autoplay = true;
-  video.playsInline = true;
-  video.classList.add('w-full', 'rounded');
-
-  // Mute only local video (labeled 'You')
-  if (label === 'You') {
-    video.muted = true;  // mute audio playback for your own video element
-    // If you want to mute video track too, you can disable it here, but usually muting audio is enough
-  }
-
-  const nameTag = document.createElement('div');
-  nameTag.innerText = label;
-  nameTag.classList.add('absolute', 'bottom-1', 'left-1', 'bg-black', 'text-white', 'text-xs', 'px-2', 'py-1', 'rounded');
-
-  videoWrapper.appendChild(video);
-  videoWrapper.appendChild(nameTag);
-  videoWrapper.id = `video-${label}`;
-  container.appendChild(videoWrapper);
-}
-
 
   removeVideoStream(label: string): void {
     const videoEl = document.getElementById(`video-${label}`);
     if (videoEl) {
       videoEl.remove();
+      this.updateNoVideoPlaceholderVisibility();
     }
   }
 
- shareLink(): void {
-  if (!this.myId) return;
+  /**
+   * Toggles visibility of the "No Active Video Call" placeholder
+   * depending on whether there are active video streams.
+   */
+  private updateNoVideoPlaceholderVisibility(): void {
+    const placeholder = document.getElementById('no-video-placeholder');
+    const videoContainer = document.getElementById('video-window');
 
-  const baseUrl = window.location.origin;
-  this.shareableLink = `${baseUrl}?peer=${this.myId}`;
-}
+    if (!placeholder || !videoContainer) return;
 
+    // Count video elements excluding the placeholder itself
+    const videoStreams = videoContainer.querySelectorAll('div[id^="video-"]');
+    if (videoStreams.length > 0) {
+      // Hide placeholder when videos are present
+      placeholder.style.display = 'none';
+    } else {
+      // Show placeholder when no videos
+      placeholder.style.display = 'flex';
+    }
+  }
+
+  shareLink(): void {
+    if (!this.myId) return;
+
+    const baseUrl = window.location.origin;
+    this.shareableLink = `${baseUrl}?peer=${this.myId}`;
+  }
 
   toggleSidebar() {
     this.isSidebarOpen = !this.isSidebarOpen;
@@ -301,87 +349,43 @@ export class VideoCallComponent implements OnInit, OnDestroy {
         peerId: this.myId,
         name: this.myName
       };
+
       connection.send(nameChangeMessage);
+
+      this.updateConnectionStatus(`Connected to ${peerId}`);
+    });
+
+    connection.on('close', () => {
+      this.cleanUpConnection(peerId);
+      this.updateConnectionStatus(`${peerId} disconnected.`);
     });
 
     connection.on('error', (err: any) => {
-      console.error('Connection Error:', err);
-      this.updateConnectionStatus('Failed to connect');
-      this.disconnectFromPeer(this.peerId);
+      console.error('Connection error:', err);
+      alert(`Connection error with ${peerId}: ${err}`);
     });
-
-    this.updateConnectionStatus(`Connecting to ${peerId}...`);
   }
 
   addPeerConnection(connection: any): void {
-    this.connections.push(connection);
-    this.connectedPeers.push(connection.peer);
-    this.updateConnectionStatus(`Connected to ${connection.peer}`);
-  }
-
-  updateConnectionStatus(status: string): void {
-    this.connectionStatus = status;
-    const statusElement = document.getElementById('connection-status');
-    if (statusElement) {
-      statusElement.innerHTML = this.connectionStatus;
-    }
-  }
-
-  changeName(): void {
-    if (this.myName.trim()) {
-      this.peerNames.set(this.myId, this.myName);
-      this.displayMessage(`You changed your name to: ${this.myName}`, 'You');
-
-      const nameChangeMessage = {
-        type: 'name-change',
-        peerId: this.myId,
-        name: this.myName
-      };
-
-      this.connections.forEach(conn => conn.send(nameChangeMessage));
-    }
-  }
-
-  clearChat(): void {
-    const chatWindow = document.getElementById('chat-window') as HTMLElement;
-    while (chatWindow.firstChild) {
-      chatWindow.removeChild(chatWindow.firstChild);
-    }
-  }
-
-  disconnectFromPeer(peerId: string): void {
-    const connection = this.connections.find(conn => conn.peer === peerId);
-    if (connection) {
-      const disconnectMessage = {
-        type: 'disconnect',
-        peerId: this.myId
-      };
-      connection.send(disconnectMessage);
-      connection.close();
-      this.cleanUpConnection(peerId);
+    if (!this.connections.some(conn => conn.peer === connection.peer)) {
+      this.connections.push(connection);
+      this.connectedPeers.push(connection.peer);
     }
   }
 
   cleanUpConnection(peerId: string): void {
-    // Remove connection references
     this.connections = this.connections.filter(conn => conn.peer !== peerId);
     this.connectedPeers = this.connectedPeers.filter(id => id !== peerId);
+    this.peerNames.delete(peerId);
+    this.removeVideoStream(peerId);
+  }
 
-    // If there's an active call, close it and remove video
-    if (this.activeCalls.has(peerId)) {
-      const call = this.activeCalls.get(peerId);
-      call.close();
-      this.activeCalls.delete(peerId);
-      this.removeVideoStream(peerId);
-    }
-
-    this.updateConnectionStatus(`Disconnected from ${peerId}`);
+  updateConnectionStatus(status: string): void {
+    this.connectionStatus = status;
   }
 
   ngOnDestroy(): void {
-    if (this.peer) {
-      this.peer.destroy();
-    }
+    this.endCall();
+    this.peer.destroy();
   }
-
 }
