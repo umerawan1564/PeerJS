@@ -57,7 +57,7 @@ export class ChatMessagingComponent implements OnInit, OnDestroy {
         this.peer.on('open', (id: string) => {
           this.myId = id;
           console.log('Patient Peer initialized with ID:', this.myId);
-          this.updateConnectionStatus('Waiting for patient to connect...');
+          this.updateConnectionStatus('Connecting to provider...');
 
           if (incomingPeerId && incomingPeerId.trim()) {
             this.peerId = incomingPeerId.trim();
