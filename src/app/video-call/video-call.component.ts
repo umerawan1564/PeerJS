@@ -25,6 +25,7 @@ export class VideoCallComponent implements OnInit, OnDestroy {
   activeCalls: Map<string, any> = new Map();
 
   isProvider: boolean = false;
+  showMessaging = false;
 
   constructor(private route: ActivatedRoute, private location: Location) {}
 
@@ -73,8 +74,27 @@ export class VideoCallComponent implements OnInit, OnDestroy {
 
       // Initially show the "No Active Video Call" placeholder
       this.updateNoVideoPlaceholderVisibility();
+      // this.updateBodyOverflow();
     });
   }
+
+  toggleVideoCall() {
+    // Optional: you can leave this empty
+  }
+
+  toggleMessaging() {
+    this.showMessaging = !this.showMessaging;
+    // this.updateBodyOverflow();
+  }
+
+  // private updateBodyOverflow() {
+  //   const body = document.body;
+  //   if (this.showVideoCall || this.showMessaging) {
+  //     this.renderer.addClass(body, 'overflow-hidden');
+  //   } else {
+  //     this.renderer.removeClass(body, 'overflow-hidden');
+  //   }
+  // }
 
   generateRandomId(): string {
     return Math.random().toString(36).substring(2, 10);
