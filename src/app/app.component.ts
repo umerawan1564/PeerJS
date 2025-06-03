@@ -27,8 +27,9 @@ export class AppComponent implements OnInit, OnDestroy {
     isSidebarOpen = true;
     localStream!: MediaStream;
     activeCalls: Map<string, any> = new Map();
-  
+    incomingName: any;
     isProvider: boolean = false;
+    connectionCheckInterval: any;
   
   
 
@@ -38,12 +39,12 @@ export class AppComponent implements OnInit, OnDestroy {
      this.route.queryParams.subscribe(params => {
         const incomingPeerId = params['peer'];
         console.log('incomming peer id', incomingPeerId);
-        const incomingName = params['name'];
-        console.log('incomming name', incomingName);
+        this.incomingName = params['name'];
+        console.log('incomming name', this.incomingName);
   
-        if (incomingName === 'provider') {
+        if (this.incomingName === 'provider') {
           // Provider uses incomingPeerId as their own Peer ID
-          if (incomingName === 'provider') {
+          if (this.incomingName === 'provider') {
             this.peerId = incomingPeerId;
           } else {
             this.peerId = 'provider-' + this.generateRandomId();
@@ -57,9 +58,14 @@ export class AppComponent implements OnInit, OnDestroy {
             console.log('Provider Peer initialized with ID:', this.myId);
             this.updateConnectionStatus('Waiting for patients to connect...');
             // Provider waits for incoming connections and calls
+            
           });
   
+          this.setupPeerEvents();
+
         } else {
+          
+          if (this.incomingName === 'patient') {
           // Patient: create peer with auto-generated ID
           this.peer = new Peer();
   
@@ -74,13 +80,27 @@ export class AppComponent implements OnInit, OnDestroy {
             }
           });
         }
+        }
   
-        this.setupPeerEvents();
+        // this.setupPeerEvents();
   
         // Initially show the "No Active Video Call" placeholder
         this.updateNoVideoPlaceholderVisibility();
       });
     this.updateBodyOverflow();
+
+    this.connectionCheckInterval = setInterval(() => {
+      if (this.connections.length > 0 && this.incomingName === 'provider') {
+        this.updateConnectionStatus(`Connected to patients peer(s) successfully`);
+        
+      } 
+
+      if (this.connections.length > 0 && this.incomingName === 'patient') {
+        this.updateConnectionStatus(`Connected to providers peer(s) successfully`);
+      } 
+      
+      
+    }, 3000);  // every 3 seconds
   }
 
   toggleVideoCall() {
@@ -116,12 +136,7 @@ export class AppComponent implements OnInit, OnDestroy {
         });
   
         connection.on('open', () => {
-          const nameChangeMessage = {
-            type: 'name-change',
-            peerId: this.myId,
-            name: this.myName
-          };
-          connection.send(nameChangeMessage);
+          
         });
       });
   
@@ -146,6 +161,9 @@ export class AppComponent implements OnInit, OnDestroy {
           this.localStream = stream;
           this.displayVideoStream(this.localStream, 'You');
           call.answer(stream);
+
+          this.updateConnectionStatus(`Connected to ${call.peer}`);
+
           this.handleCallStream(call);
         }).catch(err => console.error('Error accessing media devices.', err));
       });
@@ -286,22 +304,6 @@ export class AppComponent implements OnInit, OnDestroy {
       this.isSidebarOpen = !this.isSidebarOpen;
     }
   
-    sendMessage(): void {
-      const text = this.message.trim();
-      if (!text) return;
-  
-      const chatMessage = {
-        type: 'chat',
-        peerId: this.myId,
-        name: this.myName,
-        message: text
-      };
-  
-      this.connections.forEach(conn => conn.send(chatMessage));
-      this.displayMessage(text, 'You');
-      this.message = '';
-    }
-  
     handleIncomingData(data: any, fromPeer: string): void {
       if (typeof data === 'object' && data !== null) {
         switch (data.type) {
@@ -371,13 +373,7 @@ export class AppComponent implements OnInit, OnDestroy {
       connection.on('open', () => {
         this.addPeerConnection(connection);
   
-        const nameChangeMessage = {
-          type: 'name-change',
-          peerId: this.myId,
-          name: this.myName
-        };
-  
-        connection.send(nameChangeMessage);
+       
   
         this.updateConnectionStatus(`Connected to ${peerId}`);
       });
@@ -414,5 +410,10 @@ export class AppComponent implements OnInit, OnDestroy {
     ngOnDestroy(): void {
       this.endCall();
       this.peer.destroy();
+
+       if (this.connectionCheckInterval) {
+      clearInterval(this.connectionCheckInterval);
+    }
+  
     }
 }

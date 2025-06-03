@@ -1,181 +1,308 @@
-  /* Enhanced Video Grid */
+/* Enhanced Responsive Video Grid */
+.video-grid {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  grid-template-columns: 1fr;
+  grid-auto-rows: minmax(200px, 1fr);
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Mobile Portrait - Single column */
+@media (max-width: 480px) {
   .video-grid {
-    display: grid;
-    gap: 1.5rem;
+    grid-template-columns: 1fr;
+    grid-auto-rows: minmax(180px, 1fr);
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+}
+
+/* Mobile Landscape - Two columns */
+@media (min-width: 481px) and (max-width: 768px) {
+  .video-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-auto-rows: minmax(150px, 1fr);
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+}
+
+/* Tablet Portrait */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .video-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-auto-rows: minmax(210px, 1fr);
+    gap: 1rem;
+    padding: 1rem;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1025px) {
+  .video-grid {
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     grid-auto-rows: minmax(240px, 1fr);
+    gap: 1.5rem;
+    padding: 1.5rem;
   }
+}
 
-  /* Responsive Video Grid */
-  @media (max-width: 1024px) {
-    .video-grid {
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      grid-auto-rows: minmax(210px, 1fr);
-      gap: 1rem;
-    }
+/* Large Desktop */
+@media (min-width: 1440px) {
+  .video-grid {
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-auto-rows: minmax(300px, 1fr);
+    gap: 2rem;
+    padding: 2rem;
   }
+}
 
-  @media (max-width: 768px) {
-    .video-grid {
-      grid-template-columns: 1fr;
-      grid-auto-rows: minmax(200px, 1fr);
-      gap: 1rem;
-      padding: 1rem;
-    }
+/* Ultra-wide Screen */
+@media (min-width: 1920px) {
+  .video-grid {
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    grid-auto-rows: minmax(340px, 1fr);
+    gap: 2.5rem;
+    padding: 2.5rem;
   }
+}
 
-  @media (max-width: 640px) {
-    .video-grid {
-      grid-template-columns: 1fr;
-      grid-auto-rows: minmax(180px, 1fr);
-      gap: 0.75rem;
-      padding: 0.75rem;
-    }
-  }
+/* Dynamic Video Container Styling */
+#video-window > div {
+  position: relative;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.3) 100%);
+  backdrop-filter: blur(10px);
+  animation: videoAppear 0.5s ease-out;
+  transition: all 0.3s ease;
+  min-height: 150px;
+}
 
-  /* Enhanced Video Element Styling */
-  #video-window > div {
-    position: relative;
-    border-radius: 1rem;
-    overflow: hidden;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(148, 163, 184, 0.1);
-    background: linear-gradient(135deg, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.3) 100%);
-    backdrop-filter: blur(10px);
-    animation: videoAppear 0.5s ease-out;
-    transition: all 0.3s ease;
-  }
+#video-window > div:hover {
+  transform: scale(1.02);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+}
 
-  #video-window > div:hover {
-    transform: scale(1.02);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
-  }
+/* Adaptive Video Styling Based on Aspect Ratio */
+#video-window video {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+}
 
-  /* Video Aspect Ratio Handling */
-  #video-window video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 1rem;
-    transition: all 0.3s ease;
-  }
+/* Portrait Video (9:16, 3:4, etc.) */
+#video-window video[data-aspect="portrait"],
+#video-window video.portrait-video {
+  object-fit: contain;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+}
 
-  /* Portrait Video Handling */
-  #video-window video[data-aspect="portrait"] {
-    object-fit: contain;
-    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  }
+/* Landscape Video (16:9, 4:3, etc.) */
+#video-window video[data-aspect="landscape"],
+#video-window video.landscape-video {
+  object-fit: cover;
+}
 
-  /* Landscape Video Handling */
-  #video-window video[data-aspect="landscape"] {
-    object-fit: cover;
-  }
+/* Square Video (1:1) */
+#video-window video[data-aspect="square"],
+#video-window video.square-video {
+  object-fit: cover;
+}
 
-  /* Square Video Handling */
-  #video-window video[data-aspect="square"] {
-    object-fit: cover;
-  }
+/* Auto-detect aspect ratio and apply appropriate styling */
+#video-window video {
+  object-fit: cover; /* Default */
+}
 
-  /* Video Name Tags */
+/* Portrait container adjustment */
+#video-window > div.portrait-container {
+  aspect-ratio: 9/16;
+  max-height: 400px;
+}
+
+/* Landscape container adjustment */
+#video-window > div.landscape-container {
+  aspect-ratio: 16/9;
+  min-height: 200px;
+}
+
+/* Square container adjustment */
+#video-window > div.square-container {
+  aspect-ratio: 1/1;
+}
+
+/* Video Name Tags - Responsive */
+#video-window .video-name-tag {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.375rem 0.5rem;
+  border-radius: 0.375rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: calc(100% - 1rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
   #video-window .video-name-tag {
-    position: absolute;
     bottom: 0.75rem;
     left: 0.75rem;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%);
-    color: white;
     font-size: 0.875rem;
-    font-weight: 600;
     padding: 0.5rem 0.75rem;
     border-radius: 0.5rem;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
   }
+}
 
-  /* Custom Scrollbar */
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+/* Enhanced Mobile Responsiveness */
+@media (max-width: 640px) {
+  .video-grid {
+    padding: 0.5rem;
   }
-
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(51, 65, 85, 0.3);
-    border-radius: 3px;
+  
+  #video-window > div {
+    border-radius: 0.5rem;
+    min-height: 120px;
   }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.6) 0%, rgba(99, 102, 241, 0.6) 100%);
-    border-radius: 3px;
+  
+  #video-window video {
+    border-radius: 0.5rem;
   }
+}
 
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.8) 0%, rgba(99, 102, 241, 0.8) 100%);
+/* Custom Scrollbar for Video Grid */
+.video-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.video-grid::-webkit-scrollbar-track {
+  background: rgba(51, 65, 85, 0.3);
+  border-radius: 3px;
+}
+
+.video-grid::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.6) 0%, rgba(99, 102, 241, 0.6) 100%);
+  border-radius: 3px;
+}
+
+.video-grid::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.8) 0%, rgba(99, 102, 241, 0.8) 100%);
+}
+
+/* Enhanced Animations */
+@keyframes videoAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
   }
-
-  /* Enhanced Animations */
-  @keyframes videoAppear {
-    from {
-      opacity: 0;
-      transform: scale(0.8) translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
+}
 
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
   }
-
-  /* Button Hover Effects */
-  button:hover {
-    transform: translateY(-2px);
-  }
-
-  button:active {
+  to {
+    opacity: 1;
     transform: translateY(0);
   }
+}
 
-  /* Enhanced Focus Styles */
-  input:focus,
-  button:focus {
-    outline: 2px solid rgba(139, 92, 246, 0.6);
-    outline-offset: 2px;
-  }
+/* Button Hover Effects - Touch-friendly */
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
 
-  /* Mobile Responsive Adjustments */
-  @media (max-width: 640px) {
-    .video-grid {
-      padding: 0.5rem;
-    }
-    
-    #video-window > div {
-      border-radius: 0.75rem;
-    }
-    
-    #video-window video {
-      border-radius: 0.75rem;
-    }
-  }
+button:active:not(:disabled) {
+  transform: translateY(0);
+}
 
-  /* Ultra-wide Screen Support */
-  @media (min-width: 1920px) {
-    .video-grid {
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-      grid-auto-rows: minmax(300px, 1fr);
-      gap: 2rem;
-    }
+@media (hover: none) and (pointer: coarse) {
+  button:hover {
+    transform: none;
   }
+  
+  button:active {
+    transform: scale(0.98);
+  }
+}
 
-  /* High DPI Display Support */
-  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    #video-window > div {
-      border-width: 0.5px;
-    }
+/* Enhanced Focus Styles */
+input:focus,
+button:focus {
+  outline: 2px solid rgba(139, 92, 246, 0.6);
+  outline-offset: 2px;
+}
+
+/* High DPI Display Support */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  #video-window > div {
+    border-width: 0.5px;
   }
+}
+
+/* Orientation-specific adjustments */
+@media (orientation: portrait) and (max-width: 768px) {
+  .video-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  #video-window > div.landscape-container {
+    aspect-ratio: 16/9;
+    max-height: 250px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .video-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-auto-rows: minmax(120px, 1fr);
+  }
+  
+  #video-window > div.portrait-container {
+    aspect-ratio: 9/16;
+    max-width: 200px;
+    justify-self: center;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode enhancements */
+@media (prefers-color-scheme: dark) {
+  #video-window video {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  }
+}
+
+/* Print styles */
+@media print {
+  .video-grid {
+    display: none;
+  }
+}

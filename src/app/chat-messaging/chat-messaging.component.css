@@ -1,8 +1,5 @@
 /* Custom CSS for Sidebar */
-.sidebar {
-  height: 100vh; /* Default height for larger screens */
-  overflow-y: auto;
-}
+
 
 /* Custom CSS for Chat Container */
 .chat-container {

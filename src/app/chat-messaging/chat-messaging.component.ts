@@ -27,16 +27,16 @@ export class ChatMessagingComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
-      const incomingPeerId = params['peer2'];
-      const incomingName = params['name'];
+      const incomingPeerId2 = params['peer2'];
+      const incomingName2 = params['name'];
       
       
 
-      if (incomingName === 'provider') {
+      if (incomingName2 === 'provider') {
         this.isProvider = true;
 
-        if (incomingPeerId && incomingPeerId.trim()) {
-          this.peerId = incomingPeerId.trim();
+        if (incomingPeerId2 && incomingPeerId2.trim()) {
+          this.peerId = incomingPeerId2.trim();
         } else {
           this.peerId = 'provider-' + this.generateRandomId();
           console.warn('No peer ID found for provider in URL, using fallback:', this.peerId);
@@ -51,6 +51,7 @@ export class ChatMessagingComponent implements OnInit, OnDestroy {
         });
 
       } else {
+        if(incomingName2 === 'patient') {
         this.isProvider = false;
         this.peer = new Peer();
 
@@ -59,11 +60,12 @@ export class ChatMessagingComponent implements OnInit, OnDestroy {
           console.log('Patient Peer initialized with ID:', this.myId);
           this.updateConnectionStatus('Connecting to provider...');
 
-          if (incomingPeerId && incomingPeerId.trim()) {
-            this.peerId = incomingPeerId.trim();
+          if (incomingPeerId2 && incomingPeerId2.trim()) {
+            this.peerId = incomingPeerId2.trim();
             this.connectToPeer(this.peerId);
           }
         });
+      }
       }
 
       this.setupPeerEvents();
@@ -235,13 +237,6 @@ closeChat() {
       this.peerNames.set(this.myId, this.myName);
       this.displayMessage(`You changed your name to: ${this.myName}`, 'You');
 
-      const nameChangeMessage = {
-        type: 'name-change',
-        peerId: this.myId,
-        name: this.myName
-      };
-
-      this.connections.forEach(conn => conn.send(nameChangeMessage));
     }
   }
 
