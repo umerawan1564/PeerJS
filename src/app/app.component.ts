@@ -299,6 +299,22 @@ export class AppComponent implements OnInit, OnDestroy {
       const baseUrl = window.location.origin;
       this.shareableLink = `${baseUrl}?peer=${this.myId}`;
     }
+
+    // Add this method to detect video aspect ratio
+      detectVideoAspectRatio(video: HTMLVideoElement): string {
+        const aspectRatio = video.videoWidth / video.videoHeight;
+        
+        if (aspectRatio > 1.5) return 'landscape';
+        if (aspectRatio < 0.8) return 'portrait';
+        return 'square';
+      }
+
+      // Apply appropriate classes when video loads
+      onVideoLoaded(video: HTMLVideoElement, container: HTMLElement) {
+        const aspectRatio = this.detectVideoAspectRatio(video);
+        container.className = `video-container ${aspectRatio}`;
+        video.className = `video-element fit-contain`;
+      }
   
     toggleSidebar() {
       this.isSidebarOpen = !this.isSidebarOpen;
