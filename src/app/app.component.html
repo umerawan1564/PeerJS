@@ -71,11 +71,12 @@
       </div>
 
       <!-- Video Area -->
-      <div class="flex-1 p-2 sm:p-4 lg:p-6 overflow-hidden">
+      <div class="flex-1 p-4 lg:p-6 overflow-hidden">
         <div class="h-full bg-gradient-to-br from-slate-800/40 via-slate-700/30 to-slate-800/40 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-slate-700/30 relative overflow-hidden shadow-2xl">
           
           <!-- No Video Placeholder -->
           <div id="no-video-placeholder" 
+               [ngClass]="{'hidden': localStream || remoteStream}"
                class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 p-4">
             <div class="text-center space-y-4 sm:space-y-6 max-w-md mx-auto">
               <div class="relative">
@@ -98,11 +99,36 @@
             </div>
           </div>
 
-          <!-- Responsive Video Container -->
+          <!-- Two Video Layout Container -->
           <div id="video-window" 
-               class="h-full responsive-video-grid">
-            <!-- Video streams will be dynamically added here -->
-            <!-- Each video element should have data attributes for aspect ratio detection -->
+               [ngClass]="{'hidden': !localStream && !remoteStream}"
+               class="h-full two-video-layout">
+            
+            <!-- Local Video Container -->
+            
+
+            <!-- Remote Video Container -->
+            <div class="video-container remote-video" 
+                 *ngIf="remoteStream"
+                 [ngClass]="{'single-video': !localStream}">
+              <video #remoteVideo 
+                     [srcObject]="remoteStream"
+                     autoplay 
+                     playsinline
+                     class="video-element">
+              </video>
+              <div class="video-name-tag">
+                <span class="video-label">{{ remotePeerName || 'Remote User' }}</span>
+              </div>
+              <div class="video-controls">
+                <button class="video-control-btn" >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
           </div>
 
         </div>

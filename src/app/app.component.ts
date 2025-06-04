@@ -31,6 +31,9 @@ export class AppComponent implements OnInit, OnDestroy {
     isProvider: boolean = false;
     connectionCheckInterval: any;
   
+    
+  remoteStream: MediaStream | null = null;
+  remotePeerName: string = '';
   
 
   constructor(private renderer: Renderer2,private route: ActivatedRoute, private location: Location) {}
